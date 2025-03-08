@@ -1,0 +1,5 @@
+.vercel
+.env
+.DS_Store
+.cache
+__pycache__/

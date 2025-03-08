@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/api/analyze-playlist",
+      "dest": "/api/analyze-playlist.py"
+    }
+  ]
+}
