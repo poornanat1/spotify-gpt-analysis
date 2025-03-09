@@ -4,3 +4,4 @@ openai
 spotipy
 python-dotenv
 pandas
+numpy

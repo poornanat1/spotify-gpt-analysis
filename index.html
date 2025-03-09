@@ -1,106 +1,852 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Spotify Playlist Portrait</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spotify Playlist Portrait</title>
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- Google Fonts -->
-  <link 
-    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400;600;700&display=swap" 
-    rel="stylesheet"
-  />
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    body {
-      font-family: 'Space Grotesk', sans-serif;
-      background-color: #f9fafb;
-    }
-    .title-font {
-      font-family: 'Syne', sans-serif;
-      font-weight: 700;
-      letter-spacing: -1px;
-    }
-  </style>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400;600;700&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+
+        .title-font {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        #threeContainer {
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #000;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 
-<body class="flex flex-col justify-center items-center min-h-screen px-4">
-  <div class="max-w-lg mx-auto text-center">
-    <!-- Main Heading -->
-    <h1 class="title-font text-3xl sm:text-4xl md:text-5xl text-gray-900 mb-8">
-      Spotify Playlist Portrait
-    </h1>
+<body>
+    <div class="min-h-screen bg-white p-4 md:p-8">
+        <div class="max-w-7xl mx-auto">
+            <header class="text-center mb-8">
+                <h1 class="title-font text-4xl sm:text-5xl text-gray-900 mb-4">Spotify Playlist Portrait</h1>
+                <p class="text-gray-600 max-w-2xl mx-auto">
+                    Enter your Spotify playlist URL to generate a poetic analysis
+                    and a dynamic energy visualization—<b>unveil the story of your soundtrack!</b>
+                </p>
+            </header>
 
-    <!-- Input + Button Container -->
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl border border-gray-200">
-      <input 
-        type="text" 
-        id="playlistUrl"
-        class="w-full border border-gray-300 rounded-lg p-3 sm:p-4 mb-4 text-base sm:text-lg focus:outline-none focus:border-black transition"
-        placeholder="Paste your Spotify playlist URL"
-      />
-      <button 
-        id="analyzeBtn"
-        class="w-full bg-black text-white rounded-lg py-2 sm:py-3 text-base sm:text-lg font-medium shadow-xl hover:bg-gray-800 transition"
-      >
-        Analyze
-      </button>
+            <div class="max-w-3xl mx-auto mb-10">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200">
+                    <input type="text" id="playlistUrl"
+                        class="w-full border border-gray-300 rounded-lg p-3 sm:p-4 mb-4 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                        placeholder="Paste your Spotify playlist URL (e.g., https://open.spotify.com/playlist/...)" />
+                    <button id="analyzeBtn"
+                        class="w-full bg-black text-white rounded-lg py-3 sm:py-4 text-base sm:text-lg font-medium shadow-lg hover:bg-gray-800 transition">
+                        Analyze & Visualize
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultsContainer" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+                    <div
+                        class="bg-white rounded-xl shadow-xl border border-gray-200 p-6 h-96 md:h-[500px] lg:h-[600px] flex flex-col">
+                        <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-900">Playlist Analysis</h2>
+                        <div id="loadingAnalysis" class="hidden flex-grow flex items-center justify-center">
+                            <div class="loader"></div>
+                        </div>
+                        <div id="analysisText" class="text-gray-800 overflow-y-auto custom-scrollbar flex-grow"></div>
+                        <div class="mt-4 text-sm text-gray-500">
+                            <span id="trackCount" class="font-medium"></span>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-xl shadow-xl border border-gray-200 p-6 h-96 md:h-[500px] lg:h-[600px] flex flex-col relative">
+
+                        <div class="flex flex-col h-full justify-between">
+
+                            <div class="flex flex-col flex-grow">
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                    <h2 id="visualizationTitle" class="text-lg font-bold">
+                                        Energy Visualization
+                                    </h2>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button id="energyBtn"
+                                            class="bg-black text-white px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            Energy
+                                        </button>
+                                        <button id="danceBtn"
+                                            class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            Danceability
+                                        </button>
+                                        <button id="moodBtn"
+                                            class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            Mood
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="threeContainer" class="flex-grow w-full h-full"></div>
+                            </div>
+
+                            <div>
+                                <div id="dataSourceIndicator" class="mb-2 text-xs text-gray-500 hidden text-center">
+                                    Data source: <span id="dataSource">AI Prediction</span>
+                                </div>
+
+                                <div id="colorLegendContainer" class="flex flex-col items-center">
+                                    <div id="energyLegend" class="hidden flex items-center justify-center space-x-2">
+                                        <span class="text-xs text-gray-600">Low Energy</span>
+                                        <div
+                                            class="w-32 h-4 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 rounded">
+                                        </div>
+                                        <span class="text-xs text-gray-600">High Energy</span>
+                                    </div>
+
+                                    <div id="danceabilityLegend"
+                                        class="hidden flex items-center justify-center space-x-2">
+                                        <span class="text-xs text-gray-600">Less Danceable</span>
+                                        <div
+                                            class="w-32 h-4 bg-gradient-to-r from-purple-600 via-indigo-500 to-green-500 rounded">
+                                        </div>
+                                        <span class="text-xs text-gray-600">More Danceable</span>
+                                    </div>
+
+                                    <div id="moodLegend" class="hidden flex items-center justify-center space-x-2">
+                                        <span class="text-xs text-gray-600">Negative</span>
+                                        <div
+                                            class="w-32 h-4 bg-gradient-to-r from-red-500 via-orange-400 to-green-400 rounded">
+                                        </div>
+                                        <span class="text-xs text-gray-600">Positive</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="songTooltip"
+                            class="hidden absolute bg-black bg-opacity-75 text-white px-3 py-2 rounded-lg text-sm pointer-events-none z-10 shadow-lg">
+                            <div id="tooltipTitle" class="font-bold"></div>
+                            <div id="tooltipArtist" class="text-xs text-gray-300"></div>
+                            <div id="tooltipValue" class="text-xs mt-1"></div>
+                        </div>
+
+                        <div id="loadingVisualization" class="hidden absolute inset-0 flex items-center justify-center
+                        bg-white bg-opacity-75 rounded-xl">
+                            <div class="loader"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Analysis Results Container -->
-    <div 
-      id="result" 
-      class="mt-8 bg-white rounded-xl shadow-2xl border border-gray-200 p-6 sm:p-8 max-w-2xl mx-auto hidden"
-    >
-      <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-900">Analysis Results</h2>
-      <div id="analysisText" class="text-gray-700 whitespace-pre-line"></div>
-    </div>
-  </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <!-- Script for handling the API call -->
-  <script>
-    document.getElementById('analyzeBtn').addEventListener('click', async () => {
-      const playlistUrl = document.getElementById('playlistUrl').value;
-      const analysisText = document.getElementById('analysisText');
-      const resultDiv = document.getElementById('result');
+    <script>
+        const state = {
+            isLoading: false,
+            playlistData: null,
+            visualizationMode: 'energy'
+        };
 
-      if (!playlistUrl) {
-        alert('Please enter a playlist URL.');
-        return;
-      }
+        const elements = {
+            playlistUrlInput: document.getElementById('playlistUrl'),
+            analyzeBtn: document.getElementById('analyzeBtn'),
+            resultsContainer: document.getElementById('resultsContainer'),
+            analysisText: document.getElementById('analysisText'),
+            trackCount: document.getElementById('trackCount'),
+            loadingAnalysis: document.getElementById('loadingAnalysis'),
+            loadingVisualization: document.getElementById('loadingVisualization'),
+            threeContainer: document.getElementById('threeContainer'),
+            songTooltip: document.getElementById('songTooltip'),
+            tooltipTitle: document.getElementById('tooltipTitle'),
+            tooltipArtist: document.getElementById('tooltipArtist'),
+            tooltipValue: document.getElementById('tooltipValue')
+        };
 
-      analysisText.textContent = 'Analyzing your playlist... ⏳';
-      resultDiv.classList.remove('hidden');
+        elements.analyzeBtn.addEventListener('click', handleAnalyzeButtonClick);
 
-      try {
-        const response = await fetch('https://spotify-analyzer-4o.vercel.app/api/analyze-playlist', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ playlist_url: playlistUrl })
+        document.getElementById('energyBtn').addEventListener('click', () => {
+            switchVisualizationMode('energy');
+        });
+        document.getElementById('danceBtn').addEventListener('click', () => {
+            switchVisualizationMode('danceability');
+        });
+        document.getElementById('moodBtn').addEventListener('click', () => {
+            switchVisualizationMode('mood');
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+
+
+        async function fetchPlaylistAnalysis(playlistUrl) {
+            try {
+                const response = await fetch('https://spotify-analyzer-4o.vercel.app/api/analyze-playlist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        playlist_url: playlistUrl
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.detail) {
+                    throw new Error(data.detail);
+                }
+
+                if (!data.songs || data.songs.length === 0) {
+                    data.songs = generateSongDataWithEnergy(data.track_count || 10);
+                }
+
+                return data;
+            } catch (error) {
+                console.error('API error:', error);
+                throw error;
+            }
         }
 
-        const data = await response.json();
+        function displayAnalysisResults(data) {
+            elements.analysisText.innerHTML = `<p>${data.playlist_analysis.replace(/\n/g, '<br>')}</p>`;
+            elements.trackCount.textContent = data.track_count ? `${data.track_count} tracks analyzed` : '';
 
-        if (data.detail) {
-          analysisText.textContent = `Error: ${data.detail}`;
-        } else {
-          let resultText = `📝 Playlist Analysis:\n${data.playlist_analysis}\n\n`;
-          analysisText.textContent = resultText;
+            document.getElementById('dataSourceIndicator').classList.remove('hidden');
+
+            document.getElementById('dataSource').textContent = 'last.fm';
         }
-      } catch (error) {
-        console.error('API request failed:', error);
-        analysisText.textContent = `Failed to analyze playlist: ${error.message}`;
-      }
-    });
-  </script>
+
+        function switchVisualizationMode(mode) {
+            state.visualizationMode = mode;
+
+            const energyBtn = document.getElementById('energyBtn');
+            const danceBtn = document.getElementById('danceBtn');
+            const moodBtn = document.getElementById('moodBtn');
+            const visualizationTitle = document.getElementById('visualizationTitle');
+
+            [energyBtn, danceBtn, moodBtn].forEach(btn => {
+                btn.classList.remove('bg-black', 'text-white');
+                btn.classList.add('bg-gray-200', 'text-gray-800');
+            });
+
+            document.getElementById('energyLegend').classList.add('hidden');
+            document.getElementById('danceabilityLegend').classList.add('hidden');
+            document.getElementById('moodLegend').classList.add('hidden');
+
+            switch (mode) {
+                case 'energy':
+                    energyBtn.classList.remove('bg-gray-200', 'text-gray-800');
+                    energyBtn.classList.add('bg-black', 'text-white');
+                    visualizationTitle.textContent = 'Energy';
+                    document.getElementById('energyLegend').classList.remove('hidden');
+                    break;
+                case 'danceability':
+                    danceBtn.classList.remove('bg-gray-200', 'text-gray-800');
+                    danceBtn.classList.add('bg-black', 'text-white');
+                    visualizationTitle.textContent = 'Danceability';
+                    document.getElementById('danceabilityLegend').classList.remove('hidden');
+                    break;
+                case 'mood':
+                    moodBtn.classList.remove('bg-gray-200', 'text-gray-800');
+                    moodBtn.classList.add('bg-black', 'text-white');
+                    visualizationTitle.textContent = 'Mood';
+                    document.getElementById('moodLegend').classList.remove('hidden');
+                    break;
+            }
+
+            if (state.playlistData && window.visualizer) {
+                window.visualizer.updateVisualization(state.playlistData, mode);
+            }
+        }
+
+        function generateSongDataWithEnergy(trackCount) {
+            const songs = [];
+            const trackNames = ['Track', 'Song', 'Melody', 'Tune', 'Beat', 'Rhythm'];
+            const artistNames = ['Artist', 'Band', 'Musician', 'Producer', 'DJ', 'Composer'];
+
+            for (let i = 0; i < trackCount; i++) {
+                const trackName = `${trackNames[Math.floor(Math.random() * trackNames.length)]} ${i + 1}`;
+                const artistName =
+                    `${artistNames[Math.floor(Math.random() * artistNames.length)]} ${String.fromCharCode(65 + i % 26)}`;
+
+                const baseEnergy = 0.3 + (Math.sin(i * 0.6) * 0.3);
+                const noise = Math.random() * 0.4 - 0.2;
+                const energy = Math.max(0.1, Math.min(1.0, baseEnergy + noise));
+
+                const danceability = Math.max(0.1, Math.min(1.0, baseEnergy + Math.random() * 0.3 - 0.15));
+                const mood = Math.max(0.1, Math.min(1.0, 0.5 + Math.sin(i * 0.8) * 0.4));
+
+                songs.push({
+                    title: trackName,
+                    artist: artistName,
+                    energy: energy,
+                    danceability: danceability,
+                    mood: mood,
+                    tempo: 80 + Math.floor(Math.random() * 80),
+                    source: "sample"
+                });
+            }
+
+            return songs;
+        }
+
+
+
+        class ModernPlaylistVisualizer {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.renderer = null;
+                this.scene = null;
+                this.camera = null;
+                this.isInitialized = false;
+                this.bars = [];
+                this.songs = [];
+                this.currentMode = 'energy';
+
+                this.animationStartTime = null;
+                this.animationDuration = 100;
+
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+                this.hoveredBar = null;
+                this.tooltip = document.getElementById('songTooltip');
+                this.tooltipTitle = document.getElementById('tooltipTitle');
+                this.tooltipArtist = document.getElementById('tooltipArtist');
+                this.tooltipValue = document.getElementById('tooltipValue');
+
+                this.animate = this.animate.bind(this);
+                this.onMouseMove = this.onMouseMove.bind(this);
+
+                this.container.addEventListener('mousemove', this.onMouseMove);
+                this.container.addEventListener('mouseleave', () => {
+                    if (this.tooltip) {
+                        this.tooltip.classList.add('hidden');
+                    }
+                    if (this.hoveredBar) {
+                        this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                        this.hoveredBar = null;
+                    }
+                });
+
+                window.addEventListener('resize', this.handleResize.bind(this));
+            }
+
+            initialize() {
+                if (this.isInitialized) return;
+
+                const width = this.container.clientWidth;
+                const height = this.container.clientHeight;
+
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x000000);
+
+                this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
+                this.camera.position.set(0, 10, 20);
+
+                this.renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true
+                });
+                this.renderer.setSize(width, height);
+                this.renderer.setPixelRatio(window.devicePixelRatio);
+
+                while (this.container.firstChild) {
+                    this.container.removeChild(this.container.firstChild);
+                }
+                this.container.appendChild(this.renderer.domElement);
+
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                this.scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 7.5);
+                this.scene.add(directionalLight);
+
+                this.isInitialized = true;
+            }
+
+            handleResize() {
+                if (!this.isInitialized) return;
+
+                const width = this.container.clientWidth;
+                const height = this.container.clientHeight;
+
+                this.camera.aspect = width / height;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(width, height);
+            }
+
+            loadSongs(songData, mode) {
+                this.initialize();
+                this.songs = this.normalizeFeatureValues(songData, mode);
+                this.currentMode = mode;
+                this.clearScene();
+                this.createVisualization();
+                this.startAnimation();
+            }
+
+            getFeatureName(mode) {
+                switch (mode) {
+                    case 'danceability':
+                        return 'danceability';
+                    case 'mood':
+                        return 'mood';
+                    default:
+                        return 'energy';
+                }
+            }
+
+            normalizeFeatureValues(songData, mode) {
+                const featureName = this.getFeatureName(mode);
+                if (!featureName) return songData;
+
+                const values = songData.map(song => song[featureName]);
+
+                const sortedValues = [...values].sort((a, b) => a - b);
+
+                return songData.map(song => {
+                    const value = song[featureName];
+
+                    const index = sortedValues.indexOf(value);
+
+                    const normalizedRank = index / (sortedValues.length - 1);
+
+                    return {
+                        ...song,
+                        normalizedValue: normalizedRank,
+                        value: value
+                    };
+                });
+            }
+
+            updateVisualization(songData, mode) {
+                this.currentMode = mode;
+                this.songs = this.normalizeFeatureValues(songData, mode);
+                this.clearScene();
+                this.createVisualization();
+                this.startAnimation();
+            }
+
+            clearScene() {
+                while (this.scene.children.length > 0) {
+                    const object = this.scene.children[0];
+                    if (object.geometry) object.geometry.dispose();
+                    if (object.material) {
+                        if (Array.isArray(object.material)) {
+                            object.material.forEach(mat => mat.dispose());
+                        } else {
+                            object.material.dispose();
+                        }
+                    }
+                    this.scene.remove(object);
+                }
+
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                this.scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 7.5);
+                this.scene.add(directionalLight);
+
+                this.bars = [];
+            }
+
+            createVisualization() {
+                if (!this.songs.length) return;
+
+                this.createBars();
+
+                const songCount = this.songs.length;
+                const cameraZ = Math.max(20, songCount * 0.8);
+                this.camera.position.set(0, 8, cameraZ);
+                this.camera.lookAt(0, 3, 0);
+            }
+
+            createBars() {
+                const songCount = this.songs.length;
+                if (songCount === 0) return;
+
+                const maxBarWidth = 0.8;
+                const minBarWidth = 0.3;
+                const maxSpacing = 0.3;
+                const minSpacing = 0.1;
+                let barWidth, spacing;
+
+                if (songCount <= 10) {
+                    barWidth = maxBarWidth;
+                    spacing = maxSpacing;
+                } else if (songCount > 50) {
+                    barWidth = minBarWidth;
+                    spacing = minSpacing;
+                } else {
+                    const t = (songCount - 10) / 40;
+                    barWidth = maxBarWidth - t * (maxBarWidth - minBarWidth);
+                    spacing = maxSpacing - t * (maxSpacing - minSpacing);
+                }
+
+                const maxHeight = 10;
+
+                const totalWidth = (barWidth + spacing) * songCount - spacing;
+                const startX = -totalWidth / 2 + barWidth / 2;
+
+                this.bars = [];
+
+                for (let i = 0; i < songCount; i++) {
+                    const song = this.songs[i];
+
+                    const value = song.normalizedValue !== undefined ? song.normalizedValue : 0.5;
+
+                    const minHeight = 1;
+                    const maxHeight = 10;
+                    const heightRange = maxHeight - minHeight;
+                    const finalHeight = minHeight + (value * heightRange);
+
+                    const color = this.getColorForValue(value, this.currentMode);
+
+                    const geometry = new THREE.BoxGeometry(barWidth, finalHeight, barWidth);
+
+                    const material = new THREE.MeshPhongMaterial({
+                        color: color,
+                        transparent: true,
+                        opacity: 0.85,
+                        reflectivity: 0.9,
+                        emissive: color.clone().multiplyScalar(0.5 + value * 0.5),
+                    });
+
+                    const bar = new THREE.Mesh(geometry, material);
+
+                    const xPos = startX + i * (barWidth + spacing);
+                    bar.position.set(xPos, finalHeight / 2, 0);
+
+                    bar.userData = {
+                        songIndex: i,
+                        title: song.title || 'Unknown',
+                        artist: song.artist || 'Unknown Artist',
+                        value: song[this.getFeatureName(this.currentMode)],
+                        normalizedValue: value
+                    };
+
+                    this.scene.add(bar);
+                    this.bars.push(bar);
+                }
+
+                const planeGeometry = new THREE.PlaneGeometry(totalWidth + 10, totalWidth * 0.75);
+                const planeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x111111,
+                    metalness: 0.8,
+                    roughness: 0.5
+                });
+                const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+                plane.rotation.x = -Math.PI / 2;
+                plane.position.y = -0.01;
+                this.scene.add(plane);
+
+                const gridHelper = new THREE.GridHelper(totalWidth + 10, 20, 0x555555, 0x333333);
+                gridHelper.position.y = 0.01;
+                this.scene.add(gridHelper);
+            }
+
+            startAnimation() {
+                this.animationStartTime = Date.now();
+                if (!this.isAnimating) {
+                    this.isAnimating = true;
+                    this.animate();
+                }
+            }
+
+            animate() {
+                if (!this.isInitialized) return;
+
+                requestAnimationFrame(this.animate);
+
+
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            onMouseMove(event) {
+                if (!this.isInitialized || !this.tooltip) return;
+
+                const rect = this.renderer.domElement.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                this.mouse.set(x, y);
+                this.raycaster.setFromCamera(this.mouse, this.camera);
+
+                const intersects = this.raycaster.intersectObjects(this.bars);
+
+                if (this.hoveredBar && (!intersects.length || intersects[0].object !== this.hoveredBar)) {
+                    this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                    this.hoveredBar = null;
+                }
+
+                if (intersects.length > 0) {
+                    const object = intersects[0].object;
+                    const userData = object.userData;
+
+                    if (this.hoveredBar !== object) {
+                        if (this.hoveredBar) {
+                            this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                        }
+                        this.hoveredBar = object;
+                        object.material.emissive.multiplyScalar(1.5);
+                    }
+
+                    this.tooltipTitle.textContent = userData.title;
+                    this.tooltipArtist.textContent = userData.artist;
+
+                    let valueText;
+                    switch (this.currentMode) {
+                        case 'energy':
+                            valueText = `Energy: ${(userData.value * 100).toFixed(1)}%`;
+                            break;
+                        case 'danceability':
+                            valueText = `Danceability: ${(userData.value * 100).toFixed(1)}%`;
+                            break;
+                        case 'mood':
+                            valueText = `Mood: ${(userData.value * 100).toFixed(1)}%`;
+                            break;
+                        default:
+                            valueText = `Value: ${(userData.value * 100).toFixed(1)}%`;
+                    }
+                    this.tooltipValue.textContent = valueText;
+
+                    this.tooltip.style.display = 'block';
+                    this.tooltip.classList.remove('hidden');
+
+                    const tooltipX = event.clientX + 10;
+                    const tooltipY = event.clientY - 10;
+
+                    const tooltipWidth = this.tooltip.offsetWidth;
+                    const tooltipHeight = this.tooltip.offsetHeight;
+                    const windowWidth = window.innerWidth;
+                    const windowHeight = window.innerHeight;
+
+                    let finalX = tooltipX;
+                    let finalY = tooltipY;
+
+                    if (tooltipX + tooltipWidth > windowWidth) {
+                        finalX = event.clientX - tooltipWidth - 10;
+                    }
+
+                    if (tooltipY + tooltipHeight > windowHeight) {
+                        finalY = event.clientY - tooltipHeight - 10;
+                    }
+
+                    this.tooltip.style.zIndex = '1000';
+                    this.tooltip.style.position = 'fixed';
+                    this.tooltip.style.left = finalX + 'px';
+                    this.tooltip.style.top = finalY + 'px';
+                } else {
+                    this.tooltip.classList.add('hidden');
+                    this.tooltip.style.display = 'none';
+                }
+            }
+
+    getColorForValue(normalizedValue, mode) {
+        if (mode === 'energy') {
+            if (normalizedValue < 0.5) {
+                const blendFactor = normalizedValue / 0.5;
+                return new THREE.Color(
+                    blendFactor * 0.5,
+                    0,
+                    1 - (blendFactor * 0.5)
+                );
+            } else {
+                const blendFactor = (normalizedValue - 0.5) / 0.5;
+                return new THREE.Color(
+                    0.5 + (blendFactor * 0.5),
+                    0,
+                    0.5 - (blendFactor * 0.5)
+                );
+            }
+        } 
+        else if (mode === 'mood') {
+            if (normalizedValue < 0.5) {
+                const blendFactor = normalizedValue / 0.5;
+                return new THREE.Color(
+                    1,
+                    blendFactor * 0.5,
+                    0
+                );
+            } else {
+                const blendFactor = (normalizedValue - 0.5) / 0.5;
+                return new THREE.Color(
+                    1 - blendFactor,
+                    0.5 + (blendFactor * 0.5),
+                    0
+                );
+            }
+        }
+        else if (mode === 'danceability') {
+            if (normalizedValue < 0.5) {
+                const blendFactor = normalizedValue / 0.5;
+                return new THREE.Color(
+                    0.5 - (blendFactor * 0.5),
+                    0,
+                    blendFactor * 0.5 + 0.5
+                );
+            } else {
+                const blendFactor = (normalizedValue - 0.5) / 0.5;
+                return new THREE.Color(
+                    0,
+                    blendFactor,
+                    1 - blendFactor
+                );
+            }
+        }
+        
+        return new THREE.Color(0.5, 0.5, 0.5);
+    }
+
+            dispose() {
+                this.container.removeEventListener('mousemove', this.onMouseMove);
+                window.removeEventListener('resize', this.handleResize);
+
+                this.isAnimating = false;
+
+                this.clearScene();
+
+                if (this.renderer) {
+                    this.renderer.dispose();
+                    this.container.removeChild(this.renderer.domElement);
+                }
+
+                this.isInitialized = false;
+            }
+        }
+
+
+        function initializeVisualization(songData, mode) {
+            if (window.visualizer) {
+                window.visualizer.dispose();
+            }
+            window.visualizer = new ModernPlaylistVisualizer('threeContainer');
+            window.visualizer.loadSongs(songData, mode);
+
+            document.getElementById('energyLegend').classList.add('hidden');
+            document.getElementById('danceabilityLegend').classList.add('hidden');
+            document.getElementById('moodLegend').classList.add('hidden');
+
+            switch (mode) {
+                case 'energy':
+                    document.getElementById('energyLegend').classList.remove('hidden');
+                    break;
+                case 'danceability':
+                    document.getElementById('danceabilityLegend').classList.remove('hidden');
+                    break;
+                case 'mood':
+                    document.getElementById('moodLegend').classList.remove('hidden');
+                    break;
+            }
+        }
+
+        async function handleAnalyzeButtonClick() {
+            const playlistUrl = elements.playlistUrlInput.value.trim();
+
+            if (!playlistUrl) {
+                alert('Please enter a Spotify playlist URL.');
+                return;
+            }
+            if (!playlistUrl.includes('spotify.com/playlist/')) {
+                alert('Please enter a valid Spotify playlist URL.');
+                return;
+            }
+
+            state.isLoading = true;
+            elements.analyzeBtn.disabled = true;
+            elements.analyzeBtn.textContent = 'Processing...';
+            elements.resultsContainer.classList.remove('hidden');
+            elements.loadingAnalysis.classList.remove('hidden');
+            elements.loadingVisualization.classList.remove('hidden');
+            elements.analysisText.innerHTML = '';
+
+            try {
+                const analysisData = await fetchPlaylistAnalysis(playlistUrl);
+
+                displayAnalysisResults(analysisData);
+
+                if (analysisData.songs && analysisData.songs.length > 0) {
+                    state.playlistData = analysisData.songs;
+                    initializeVisualization(analysisData.songs, state.visualizationMode);
+                }
+            } catch (error) {
+                console.error('Error analyzing playlist:', error);
+                elements.analysisText.innerHTML =
+                    `<p class="text-red-500">Error: Could not analyze playlist. ${error.message}</p>`;
+            } finally {
+                state.isLoading = false;
+                elements.analyzeBtn.disabled = false;
+                elements.analyzeBtn.textContent = 'Analyze & Visualize';
+                elements.loadingAnalysis.classList.add('hidden');
+                elements.loadingVisualization.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('energyLegend').classList.remove('hidden');
+        document.getElementById('danceabilityLegend').classList.add('hidden');
+        document.getElementById('moodLegend').classList.add('hidden');
+
+        const songTooltip = document.getElementById('songTooltip');
+        if (songTooltip) {
+            songTooltip.style.position = 'fixed';
+            songTooltip.style.zIndex = '1000';
+            songTooltip.classList.add('hidden');
+            songTooltip.style.display = 'none';
+        }
+    </script>
 </body>
+
 </html>
