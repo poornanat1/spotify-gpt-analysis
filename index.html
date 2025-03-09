@@ -354,9 +354,12 @@
                 this.bars = [];
                 this.songs = [];
                 this.currentMode = 'energy';
+                this.targetHeights = []; // Add the targetHeights array
 
                 this.animationStartTime = null;
-                this.animationDuration = 100;
+                this.animationProgress = 0;
+                this.animationDuration = 1200;
+                this.animationComplete = false;
 
                 this.raycaster = new THREE.Raycaster();
                 this.mouse = new THREE.Vector2();
@@ -366,8 +369,14 @@
                 this.tooltipArtist = document.getElementById('tooltipArtist');
                 this.tooltipValue = document.getElementById('tooltipValue');
 
+                // Bind all methods that use 'this'
                 this.animate = this.animate.bind(this);
                 this.onMouseMove = this.onMouseMove.bind(this);
+                this.handleResize = this.handleResize.bind(this);
+                this.startAnimation = this.startAnimation.bind(this);
+                this.createBars = this.createBars.bind(this);
+                this.easeOutCubic = this.easeOutCubic.bind(this);
+                this.updateVisualization = this.updateVisualization.bind(this);
 
                 this.container.addEventListener('mousemove', this.onMouseMove);
                 this.container.addEventListener('mouseleave', () => {
@@ -380,9 +389,10 @@
                     }
                 });
 
-                window.addEventListener('resize', this.handleResize.bind(this));
+                window.addEventListener('resize', this.handleResize);
             }
 
+            // The rest of your methods remain the same
             initialize() {
                 if (this.isInitialized) return;
 
@@ -453,14 +463,11 @@
                 if (!featureName) return songData;
 
                 const values = songData.map(song => song[featureName]);
-
                 const sortedValues = [...values].sort((a, b) => a - b);
 
                 return songData.map(song => {
                     const value = song[featureName];
-
                     const index = sortedValues.indexOf(value);
-
                     const normalizedRank = index / (sortedValues.length - 1);
 
                     return {
@@ -501,6 +508,7 @@
                 this.scene.add(directionalLight);
 
                 this.bars = [];
+                this.targetHeights = []; // Clear target heights when clearing scene
             }
 
             createVisualization() {
@@ -536,16 +544,14 @@
                     spacing = maxSpacing - t * (maxSpacing - minSpacing);
                 }
 
-                const maxHeight = 10;
-
                 const totalWidth = (barWidth + spacing) * songCount - spacing;
                 const startX = -totalWidth / 2 + barWidth / 2;
 
                 this.bars = [];
+                this.targetHeights = [];
 
                 for (let i = 0; i < songCount; i++) {
                     const song = this.songs[i];
-
                     const value = song.normalizedValue !== undefined ? song.normalizedValue : 0.5;
 
                     const minHeight = 1;
@@ -553,9 +559,11 @@
                     const heightRange = maxHeight - minHeight;
                     const finalHeight = minHeight + (value * heightRange);
 
+                    this.targetHeights.push(finalHeight);
+
                     const color = this.getColorForValue(value, this.currentMode);
 
-                    const geometry = new THREE.BoxGeometry(barWidth, finalHeight, barWidth);
+                    const geometry = new THREE.BoxGeometry(barWidth, 0.01, barWidth);
 
                     const material = new THREE.MeshPhongMaterial({
                         color: color,
@@ -568,7 +576,7 @@
                     const bar = new THREE.Mesh(geometry, material);
 
                     const xPos = startX + i * (barWidth + spacing);
-                    bar.position.set(xPos, finalHeight / 2, 0);
+                    bar.position.set(xPos, 0.005, 0);
 
                     bar.userData = {
                         songIndex: i,
@@ -600,6 +608,10 @@
 
             startAnimation() {
                 this.animationStartTime = Date.now();
+                this.animationProgress = 0;
+                this.animationDuration = 1200;
+                this.animationComplete = false;
+
                 if (!this.isAnimating) {
                     this.isAnimating = true;
                     this.animate();
@@ -611,8 +623,36 @@
 
                 requestAnimationFrame(this.animate);
 
+                if (!this.animationComplete && this.bars.length > 0 && this.targetHeights.length > 0) {
+                    const currentTime = Date.now();
+                    const elapsed = currentTime - this.animationStartTime;
+                    this.animationProgress = Math.min(elapsed / this.animationDuration, 1.0);
+
+                    const easedProgress = this.easeOutCubic(this.animationProgress);
+
+                    for (let i = 0; i < this.bars.length; i++) {
+                        const bar = this.bars[i];
+                        if (!bar || !bar.geometry) continue;
+
+                        const targetHeight = this.targetHeights[i];
+                        const currentHeight = targetHeight * easedProgress;
+
+                        bar.geometry.dispose();
+                        bar.geometry = new THREE.BoxGeometry(bar.geometry.parameters.width, currentHeight, bar
+                            .geometry.parameters.depth);
+                        bar.position.y = currentHeight / 2;
+                    }
+
+                    if (this.animationProgress >= 1.0) {
+                        this.animationComplete = true;
+                    }
+                }
 
                 this.renderer.render(this.scene, this.camera);
+            }
+
+            easeOutCubic(x) {
+                return 1 - Math.pow(1 - x, 3);
             }
 
             onMouseMove(event) {
@@ -695,61 +735,59 @@
                 }
             }
 
-    getColorForValue(normalizedValue, mode) {
-        if (mode === 'energy') {
-            if (normalizedValue < 0.5) {
-                const blendFactor = normalizedValue / 0.5;
-                return new THREE.Color(
-                    blendFactor * 0.5,
-                    0,
-                    1 - (blendFactor * 0.5)
-                );
-            } else {
-                const blendFactor = (normalizedValue - 0.5) / 0.5;
-                return new THREE.Color(
-                    0.5 + (blendFactor * 0.5),
-                    0,
-                    0.5 - (blendFactor * 0.5)
-                );
+            getColorForValue(normalizedValue, mode) {
+                if (mode === 'energy') {
+                    if (normalizedValue < 0.5) {
+                        const blendFactor = normalizedValue / 0.5;
+                        return new THREE.Color(
+                            blendFactor * 0.5,
+                            0,
+                            1 - (blendFactor * 0.5)
+                        );
+                    } else {
+                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        return new THREE.Color(
+                            0.5 + (blendFactor * 0.5),
+                            0,
+                            0.5 - (blendFactor * 0.5)
+                        );
+                    }
+                } else if (mode === 'mood') {
+                    if (normalizedValue < 0.5) {
+                        const blendFactor = normalizedValue / 0.5;
+                        return new THREE.Color(
+                            1,
+                            blendFactor * 0.5,
+                            0
+                        );
+                    } else {
+                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        return new THREE.Color(
+                            1 - blendFactor,
+                            0.5 + (blendFactor * 0.5),
+                            0
+                        );
+                    }
+                } else if (mode === 'danceability') {
+                    if (normalizedValue < 0.5) {
+                        const blendFactor = normalizedValue / 0.5;
+                        return new THREE.Color(
+                            0.5 - (blendFactor * 0.5),
+                            0,
+                            blendFactor * 0.5 + 0.5
+                        );
+                    } else {
+                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        return new THREE.Color(
+                            0,
+                            blendFactor,
+                            1 - blendFactor
+                        );
+                    }
+                }
+
+                return new THREE.Color(0.5, 0.5, 0.5);
             }
-        } 
-        else if (mode === 'mood') {
-            if (normalizedValue < 0.5) {
-                const blendFactor = normalizedValue / 0.5;
-                return new THREE.Color(
-                    1,
-                    blendFactor * 0.5,
-                    0
-                );
-            } else {
-                const blendFactor = (normalizedValue - 0.5) / 0.5;
-                return new THREE.Color(
-                    1 - blendFactor,
-                    0.5 + (blendFactor * 0.5),
-                    0
-                );
-            }
-        }
-        else if (mode === 'danceability') {
-            if (normalizedValue < 0.5) {
-                const blendFactor = normalizedValue / 0.5;
-                return new THREE.Color(
-                    0.5 - (blendFactor * 0.5),
-                    0,
-                    blendFactor * 0.5 + 0.5
-                );
-            } else {
-                const blendFactor = (normalizedValue - 0.5) / 0.5;
-                return new THREE.Color(
-                    0,
-                    blendFactor,
-                    1 - blendFactor
-                );
-            }
-        }
-        
-        return new THREE.Color(0.5, 0.5, 0.5);
-    }
 
             dispose() {
                 this.container.removeEventListener('mousemove', this.onMouseMove);
