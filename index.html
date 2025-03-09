@@ -863,7 +863,7 @@
             } catch (error) {
                 console.error('Error analyzing playlist:', error);
                 elements.analysisText.innerHTML =
-                    `<p class="text-red-500">Error: Could not analyze playlist. ${error.message}</p>`;
+                    `<p class="text-red-500">Error: Could not analyze playlist. The playlist you provided is private or unavailable. Please make sure the playlist is public so it can be analyzed. You can change its visibility in the Spotify app by selecting 'Make Public' in the playlist settings.</br> ${error.message}</p>`;
             } finally {
                 state.isLoading = false;
                 elements.analyzeBtn.disabled = false;

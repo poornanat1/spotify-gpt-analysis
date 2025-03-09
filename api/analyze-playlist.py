@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModelxs
+from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 import spotipy
@@ -208,7 +208,7 @@ async def fallback_llm_scores(artist: str, track: str, album: str) -> Dict[str, 
     try:
         response = await asyncio.to_thread(
             client.chat.completions.create,
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
@@ -330,6 +330,13 @@ def get_playlist_tracks(playlist_url: str) -> List[Dict[str, Any]]:
     sp = get_spotify_client()
     try:
         playlist_id = extract_playlist_id(playlist_url)
+        playlist_info = sp.playlist(playlist_id)
+        if playlist_info.get("public") is False:
+            raise HTTPException(status_code=400, detail=(
+        "The playlist you provided is private or unavailable. "
+        "Please make sure the playlist is public so it can be analyzed. "
+        "You can change its visibility in the Spotify app by selecting 'Make Public' in the playlist settings."
+    ))
         results = sp.playlist_tracks(playlist_id, limit=30)
         tracks = []
         for item in results['items']:
@@ -346,6 +353,8 @@ def get_playlist_tracks(playlist_url: str) -> List[Dict[str, Any]]:
     except spotipy.exceptions.SpotifyException as e:
         logger.error(f"Spotify API error: {str(e)}")
         raise HTTPException(status_code=500, detail="Error connecting to Spotify API")
+    except HTTPException:
+        raise  # Preserve original error message
     except Exception as e:
         logger.error(f"Unexpected error fetching playlist tracks: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
@@ -367,12 +376,12 @@ Include:
 """
         
         completion = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a skilled music analyst."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=400,
+            max_tokens=4096,
             timeout=30
         )
         if not completion or not completion.choices or not completion.choices[0].message:
