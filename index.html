@@ -9,18 +9,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Syne:wght@400;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap"
         rel="stylesheet" />
 
     <style>
         body {
-            font-family: 'Space Grotesk', sans-serif;
-            background-color: #ffffff;
-            color: #000000;
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
         }
 
         .title-font {
-            font-family: 'Syne', sans-serif;
+            font-family: 'Playfair Display', serif;
             font-weight: 700;
         }
 
@@ -33,7 +33,7 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -42,7 +42,7 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #888;
+            background: #212529;
             border-radius: 8px;
         }
 
@@ -51,11 +51,11 @@
         }
 
         .loader {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #000;
+            border: 3px solid rgba(0, 0, 0, 0.05);
+            border-left-color: #212529;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
             margin: 20px auto;
         }
@@ -69,119 +69,180 @@
                 transform: rotate(360deg);
             }
         }
+
+        .btn-primary {
+            background-color: #212529;
+            color: white;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #343a40;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: #212529;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+
+        .btn-active {
+            background-color: #212529;
+            color: white;
+        }
+
+        .card {
+            background-color: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #212529, #495057);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 
 <body>
-    <div class="min-h-screen bg-white p-4 md:p-8">
-        <div class="max-w-7xl mx-auto">
-            <header class="text-center mb-8">
-                <h1 class="title-font text-4xl sm:text-5xl text-gray-900 mb-4">Spotify Playlist Portrait</h1>
-                <p class="text-gray-600 max-w-2xl mx-auto">
-                    Enter your Spotify playlist URL to generate a poetic analysis
-                    and dynamic visualization of track flow—<b>unveil the story of your soundtrack!</b>
-                </p>
-            </header>
+    <div class="min-h-screen bg-gradient-to-b from-white to-gray-50">
+        <div id="initialView" class="p-4 md:p-8">
+            <div class="max-w-7xl mx-auto">
+                <header class="text-center mb-12 mt-8">
+                    <h1 class="title-font text-5xl sm:text-6xl gradient-text mb-6">Playlist Portrait</h1>
+                    <p class="text-gray-600 max-w-2xl mx-auto text-lg">
+                        Visualize the sonic landscape of your Spotify playlists through data-driven aesthetics
+                    </p>
+                </header>
 
-            <div class="max-w-3xl mx-auto mb-10">
-                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-xl border border-gray-200">
-                    <input type="text" id="playlistUrl"
-                        class="w-full border border-gray-300 rounded-lg p-3 sm:p-4 mb-4 text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-black transition"
-                        placeholder="Paste your Spotify playlist URL (e.g., https://open.spotify.com/playlist/...)" />
-                    <button id="analyzeBtn"
-                        class="w-full bg-black text-white rounded-lg py-3 sm:py-4 text-base sm:text-lg font-medium shadow-lg hover:bg-gray-800 transition">
-                        Analyze & Visualize
-                    </button>
+                <div class="max-w-3xl mx-auto mb-16">
+                    <div class="card p-6 sm:p-8">
+                        <input type="text" id="playlistUrl"
+                            class="w-full border-0 border-b-2 border-gray-200 p-3 sm:p-4 mb-6 text-base sm:text-lg focus:outline-none focus:border-gray-900 transition bg-transparent"
+                            placeholder="Paste your Spotify playlist URL" />
+                        <button id="analyzeBtn"
+                            class="w-full btn-primary rounded-lg py-4 text-base sm:text-lg font-medium shadow-sm">
+                            Analyze & Visualize
+                        </button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <div id="resultsContainer" class="hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-                    <div
-                        class="bg-white rounded-xl shadow-xl border border-gray-200 p-6 h-96 md:h-[500px] lg:h-[600px] flex flex-col">
-                        <h2 class="text-xl sm:text-2xl font-semibold mb-4 text-gray-900">Playlist Analysis</h2>
-                        <div id="loadingAnalysis" class="hidden flex-grow flex items-center justify-center">
-                            <div class="loader"></div>
+        <div id="resultsContainer" class="hidden h-screen flex flex-col">
+            <header class="bg-white shadow-sm py-3 px-6 sticky top-0 z-10">
+                <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+                    <div class="flex items-center mb-3 md:mb-0">
+                        <h1 class="title-font text-2xl gradient-text mr-4">Playlist Portrait</h1>
+                        <div id="playlistInfo" class="text-gray-600 text-sm md:text-base truncate max-w-md">
+                            <span id="playlistUrlDisplay" class="font-medium"></span>
                         </div>
-                        <div id="analysisText" class="text-gray-800 overflow-y-auto custom-scrollbar flex-grow"></div>
-                        <div class="mt-4 text-sm text-gray-500">
-                            <span id="trackCount" class="font-medium"></span>
+                    </div>
+                    <button id="backBtn" class="btn-secondary px-4 py-2 rounded-md text-sm shadow-sm">
+                        Analyze Another Playlist
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-grow overflow-hidden">
+                <div class="h-full grid grid-cols-1 lg:grid-cols-9 gap-6 p-4 md:p-6">
+                    <div class="lg:col-span-4 flex flex-col max-h-[calc(100vh-120px)]">
+                        <div class="card p-6 flex flex-col h-full overflow-hidden">
+                            <h2 class="text-xl font-medium mb-4 text-gray-900">Analysis</h2>
+                            <div id="loadingAnalysis" class="hidden flex-grow flex items-center justify-center">
+                                <div class="loader"></div>
+                            </div>
+                            <div id="analysisText" class="text-gray-700 overflow-y-auto custom-scrollbar flex-grow leading-relaxed"></div>
+                            <div class="mt-4 text-sm text-gray-500">
+                                <span id="trackCount" class="font-medium"></span>
+                            </div>
                         </div>
                     </div>
 
-                    <div
-                        class="bg-white rounded-xl shadow-xl border border-gray-200 p-6 h-96 md:h-[500px] lg:h-[600px] flex flex-col relative">
-
-                        <div class="flex flex-col h-full justify-between">
-
-                            <div class="flex flex-col flex-grow">
-                                <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                                    <h2 id="visualizationTitle" class="text-lg font-bold">
+                    <div class="lg:col-span-5 flex flex-col max-h-[calc(100vh-120px)]">
+                        <div class="card p-6 flex flex-col h-full relative">
+                            <div class="flex flex-col h-full">
+                                <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+                                    <h2 id="visualizationTitle" class="text-xl font-medium">
                                         Energy Visualization
                                     </h2>
                                     <div class="flex flex-wrap gap-2">
                                         <button id="energyBtn"
-                                            class="bg-black text-white px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            class="btn-active px-4 py-2 rounded-md text-sm shadow-sm transition-colors">
                                             Energy
                                         </button>
                                         <button id="danceBtn"
-                                            class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            class="btn-secondary px-4 py-2 rounded-md text-sm shadow-sm transition-colors">
                                             Danceability
                                         </button>
                                         <button id="moodBtn"
-                                            class="bg-gray-200 text-gray-800 px-3 py-1 rounded-md text-sm shadow-md transition-colors">
+                                            class="btn-secondary px-4 py-2 rounded-md text-sm shadow-sm transition-colors">
                                             Mood
                                         </button>
                                     </div>
                                 </div>
 
-                                <div id="threeContainer" class="flex-grow w-full h-full"></div>
-                            </div>
-
-                            <div>
-                                <div id="dataSourceIndicator" class="mb-2 text-xs text-gray-500 hidden text-center">
-                                    Data source: <span id="dataSource">AI Prediction</span>
+                                <div style="height: calc(100vh - 280px);" class="relative">
+                                    <div id="threeContainer" class="absolute inset-0 rounded-lg"></div>
                                 </div>
 
-                                <div id="colorLegendContainer" class="flex flex-col items-center">
-                                    <div id="energyLegend" class="hidden flex items-center justify-center space-x-2">
-                                        <span class="text-xs text-gray-600">Low Energy</span>
-                                        <div
-                                            class="w-32 h-4 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 rounded">
-                                        </div>
-                                        <span class="text-xs text-gray-600">High Energy</span>
+                                <div class="mt-4 pt-2">
+                                    <div id="dataSourceIndicator" class="mb-2 text-xs text-gray-500 hidden text-center">
+                                        Data source: <span id="dataSource" class="font-medium">AI Prediction</span>
                                     </div>
 
-                                    <div id="danceabilityLegend"
-                                        class="hidden flex items-center justify-center space-x-2">
-                                        <span class="text-xs text-gray-600">Less Danceable</span>
-                                        <div
-                                            class="w-32 h-4 bg-gradient-to-r from-purple-600 via-indigo-500 to-green-500 rounded">
+                                    <div id="colorLegendContainer" class="flex flex-col items-center">
+                                        <div id="energyLegend" class="hidden flex items-center justify-center space-x-3">
+                                            <span class="text-xs text-gray-600">Low Energy</span>
+                                            <div
+                                                class="w-40 h-3 bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 rounded-full">
+                                            </div>
+                                            <span class="text-xs text-gray-600">High Energy</span>
                                         </div>
-                                        <span class="text-xs text-gray-600">More Danceable</span>
-                                    </div>
 
-                                    <div id="moodLegend" class="hidden flex items-center justify-center space-x-2">
-                                        <span class="text-xs text-gray-600">Negative</span>
-                                        <div
-                                            class="w-32 h-4 bg-gradient-to-r from-red-500 via-orange-400 to-green-400 rounded">
+                                        <div id="danceabilityLegend"
+                                            class="hidden flex items-center justify-center space-x-3">
+                                            <span class="text-xs text-gray-600">Less Danceable</span>
+                                            <div
+                                                class="w-40 h-3 bg-gradient-to-r from-purple-600 via-indigo-500 to-green-500 rounded-full">
+                                            </div>
+                                            <span class="text-xs text-gray-600">More Danceable</span>
                                         </div>
-                                        <span class="text-xs text-gray-600">Positive</span>
+
+                                        <div id="moodLegend" class="hidden flex items-center justify-center space-x-3">
+                                            <span class="text-xs text-gray-600">Negative</span>
+                                            <div
+                                                class="w-40 h-3 bg-gradient-to-r from-red-500 via-orange-400 to-green-400 rounded-full">
+                                            </div>
+                                            <span class="text-xs text-gray-600">Positive</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <div id="songTooltip"
-                            class="hidden absolute bg-black bg-opacity-75 text-white px-3 py-2 rounded-lg text-sm pointer-events-none z-10 shadow-lg">
-                            <div id="tooltipTitle" class="font-bold"></div>
-                            <div id="tooltipArtist" class="text-xs text-gray-300"></div>
-                            <div id="tooltipValue" class="text-xs mt-1"></div>
-                        </div>
+                            <div id="songTooltip"
+                                class="hidden absolute bg-black bg-opacity-90 text-white px-4 py-3 rounded-lg text-sm pointer-events-none z-10 shadow-xl">
+                                <div id="tooltipTitle" class="font-bold"></div>
+                                <div id="tooltipArtist" class="text-xs text-gray-300"></div>
+                                <div id="tooltipValue" class="text-xs mt-2 font-medium"></div>
+                            </div>
 
-                        <div id="loadingVisualization" class="hidden absolute inset-0 flex items-center justify-center
-                        bg-white bg-opacity-75 rounded-xl">
-                            <div class="loader"></div>
+                            <div id="loadingVisualization" class="hidden absolute inset-0 flex items-center justify-center
+                            bg-white bg-opacity-90 rounded-xl">
+                                <div class="loader"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -201,6 +262,8 @@
         const elements = {
             playlistUrlInput: document.getElementById('playlistUrl'),
             analyzeBtn: document.getElementById('analyzeBtn'),
+            backBtn: document.getElementById('backBtn'),
+            initialView: document.getElementById('initialView'),
             resultsContainer: document.getElementById('resultsContainer'),
             analysisText: document.getElementById('analysisText'),
             trackCount: document.getElementById('trackCount'),
@@ -210,10 +273,15 @@
             songTooltip: document.getElementById('songTooltip'),
             tooltipTitle: document.getElementById('tooltipTitle'),
             tooltipArtist: document.getElementById('tooltipArtist'),
-            tooltipValue: document.getElementById('tooltipValue')
+            tooltipValue: document.getElementById('tooltipValue'),
+            playlistUrlDisplay: document.getElementById('playlistUrlDisplay')
         };
 
         elements.analyzeBtn.addEventListener('click', handleAnalyzeButtonClick);
+        elements.backBtn.addEventListener('click', () => {
+            elements.resultsContainer.classList.add('hidden');
+            elements.initialView.classList.remove('hidden');
+        });
 
         document.getElementById('energyBtn').addEventListener('click', () => {
             switchVisualizationMode('energy');
@@ -224,8 +292,6 @@
         document.getElementById('moodBtn').addEventListener('click', () => {
             switchVisualizationMode('mood');
         });
-
-
 
         async function fetchPlaylistAnalysis(playlistUrl) {
             try {
@@ -249,7 +315,7 @@
                 }
 
                 if (!data.songs || data.songs.length === 0) {
-                    data.songs = generateSongDataWithEnergy(data.track_count || 10);
+                    data.songs = generateSongDataWithAttributes(data.track_count || 20);
                 }
 
                 return data;
@@ -259,13 +325,81 @@
             }
         }
 
+        function generateSampleAnalysisData() {
+            const songs = generateSongDataWithAttributes(25);
+            
+            return {
+                playlist_analysis: `This playlist weaves a rich tapestry of emotions and cultural influences, guiding the listener through an experience that is both introspective and globally inspired. The journey begins with "${songs[0].title}" by ${songs[0].artist}, a track that sets a contemplative tone, steeping the listener in dreamy introspection. This vibe is stretched and warmed by "${songs[1].title}" by ${songs[1].artist}, whose instrumental depth evokes vivid imagery of serene landscapes.
+
+As we progress into "${songs[2].title}" by ${songs[2].artist}, there is a transition into more abstract sonic territories, blending indie with electronic tinges, an invitation to explore the multifaceted nature of modern soundscapes. The energy shifts with "${songs[3].title}" by ${songs[3].artist}, which injects raw, live energy into the mix, creating a powerful contrast with the earlier atmospheric pieces.
+
+The playlist's middle section, anchored by tracks like "${songs[Math.floor(songs.length/2)].title}", explores themes of personal reflection and emotional resonance. The production values here showcase a masterful balance between electronic and organic elements, creating a sonic bridge between traditional and contemporary approaches.
+
+The latter portion of the playlist demonstrates remarkable curatorial vision, with "${songs[songs.length-2].title}" and "${songs[songs.length-1].title}" bringing the journey full circle. These closing tracks maintain the emotional depth established earlier while introducing elements of hope and resolution, creating a satisfying conclusion to this carefully crafted musical journey.
+
+Throughout the playlist, the energy levels ebb and flow naturally, creating distinct moments of both introspection and elevation. The danceability factor varies intentionally, with some tracks featuring strong rhythmic elements while others favor melodic complexity. This thoughtful arrangement creates a dynamic listening experience that rewards both casual and focused listening sessions.`,
+                track_count: songs.length,
+                songs: songs
+            };
+        }
+
+        function generateSongDataWithAttributes(trackCount) {
+            const songs = [];
+            const trackNames = [
+                'Midnight Reverie', 'Solar Echoes', 'Crystal Fragments', 
+                'Urban Dreams', 'Velvet Morning', 'Neon Cascade', 
+                'Ambient Flight', 'Cosmic Drift', 'Azure Waves',
+                'Lunar Phase', 'Electric Soul', 'Golden Hour',
+                'Metro Pulse', 'Stellar Wind', 'Ocean Mind'
+            ];
+            
+            const artistNames = [
+                'The Midnight Collective', 'Ethereal Soundscape', 'Sonic Architects', 
+                'Urban Dreamers', 'Velvet Horizon', 'Neon Symphony', 
+                'Ambient Explorers', 'Cosmic Drifters', 'Azure Ensemble',
+                'Lunar Theory', 'Electric Souls', 'Golden Harmonics'
+            ];
+
+            for (let i = 0; i < trackCount; i++) {
+                const trackIndex = i % trackNames.length;
+                const artistIndex = i % artistNames.length;
+                
+                const trackName = `${trackNames[trackIndex]}`;
+                const artistName = artistNames[artistIndex];
+
+                const baseEnergy = Math.sin((i / trackCount) * Math.PI * 2) * 0.4 + 
+                                  Math.cos((i / trackCount) * Math.PI * 3) * 0.2 + 0.5;
+                
+                const baseDance = Math.cos((i / trackCount) * Math.PI * 2.5) * 0.3 + 
+                                 Math.sin((i / trackCount) * Math.PI * 1.5) * 0.3 + 0.5;
+                
+                const baseMood = Math.sin((i / trackCount) * Math.PI * 1.8) * 0.35 + 
+                                Math.cos((i / trackCount) * Math.PI * 2.2) * 0.25 + 0.5;
+
+                const noise = Math.random() * 0.2 - 0.1;
+                
+                const energy = Math.max(0.1, Math.min(0.95, baseEnergy + noise));
+                const danceability = Math.max(0.1, Math.min(0.95, baseDance + noise));
+                const mood = Math.max(0.1, Math.min(0.95, baseMood + noise));
+
+                songs.push({
+                    title: trackName,
+                    artist: artistName,
+                    energy: energy,
+                    danceability: danceability,
+                    mood: mood,
+                    tempo: 70 + Math.floor(Math.random() * 110)
+                });
+            }
+
+            return songs;
+        }
+
         function displayAnalysisResults(data) {
             elements.analysisText.innerHTML = `<p>${data.playlist_analysis.replace(/\n/g, '<br>')}</p>`;
             elements.trackCount.textContent = data.track_count ? `${data.track_count} tracks analyzed` : '';
-
             document.getElementById('dataSourceIndicator').classList.remove('hidden');
-
-            document.getElementById('dataSource').textContent = 'last.fm';
+            document.getElementById('dataSource').textContent = data.songs && data.songs[0].source === 'api' ? 'Spotify API' : 'AI Prediction';
         }
 
         function switchVisualizationMode(mode) {
@@ -277,8 +411,8 @@
             const visualizationTitle = document.getElementById('visualizationTitle');
 
             [energyBtn, danceBtn, moodBtn].forEach(btn => {
-                btn.classList.remove('bg-black', 'text-white');
-                btn.classList.add('bg-gray-200', 'text-gray-800');
+                btn.classList.remove('btn-active');
+                btn.classList.add('btn-secondary');
             });
 
             document.getElementById('energyLegend').classList.add('hidden');
@@ -287,21 +421,21 @@
 
             switch (mode) {
                 case 'energy':
-                    energyBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                    energyBtn.classList.add('bg-black', 'text-white');
-                    visualizationTitle.textContent = 'Energy';
+                    energyBtn.classList.remove('btn-secondary');
+                    energyBtn.classList.add('btn-active');
+                    visualizationTitle.textContent = 'Energy Visualization';
                     document.getElementById('energyLegend').classList.remove('hidden');
                     break;
                 case 'danceability':
-                    danceBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                    danceBtn.classList.add('bg-black', 'text-white');
-                    visualizationTitle.textContent = 'Danceability';
+                    danceBtn.classList.remove('btn-secondary');
+                    danceBtn.classList.add('btn-active');
+                    visualizationTitle.textContent = 'Danceability Visualization';
                     document.getElementById('danceabilityLegend').classList.remove('hidden');
                     break;
                 case 'mood':
-                    moodBtn.classList.remove('bg-gray-200', 'text-gray-800');
-                    moodBtn.classList.add('bg-black', 'text-white');
-                    visualizationTitle.textContent = 'Mood';
+                    moodBtn.classList.remove('btn-secondary');
+                    moodBtn.classList.add('btn-active');
+                    visualizationTitle.textContent = 'Mood Visualization';
                     document.getElementById('moodLegend').classList.remove('hidden');
                     break;
             }
@@ -310,39 +444,6 @@
                 window.visualizer.updateVisualization(state.playlistData, mode);
             }
         }
-
-        function generateSongDataWithEnergy(trackCount) {
-            const songs = [];
-            const trackNames = ['Track', 'Song', 'Melody', 'Tune', 'Beat', 'Rhythm'];
-            const artistNames = ['Artist', 'Band', 'Musician', 'Producer', 'DJ', 'Composer'];
-
-            for (let i = 0; i < trackCount; i++) {
-                const trackName = `${trackNames[Math.floor(Math.random() * trackNames.length)]} ${i + 1}`;
-                const artistName =
-                    `${artistNames[Math.floor(Math.random() * artistNames.length)]} ${String.fromCharCode(65 + i % 26)}`;
-
-                const baseEnergy = 0.3 + (Math.sin(i * 0.6) * 0.3);
-                const noise = Math.random() * 0.4 - 0.2;
-                const energy = Math.max(0.1, Math.min(1.0, baseEnergy + noise));
-
-                const danceability = Math.max(0.1, Math.min(1.0, baseEnergy + Math.random() * 0.3 - 0.15));
-                const mood = Math.max(0.1, Math.min(1.0, 0.5 + Math.sin(i * 0.8) * 0.4));
-
-                songs.push({
-                    title: trackName,
-                    artist: artistName,
-                    energy: energy,
-                    danceability: danceability,
-                    mood: mood,
-                    tempo: 80 + Math.floor(Math.random() * 80),
-                    source: "sample"
-                });
-            }
-
-            return songs;
-        }
-
-
 
         class ModernPlaylistVisualizer {
             constructor(containerId) {
@@ -354,12 +455,14 @@
                 this.bars = [];
                 this.songs = [];
                 this.currentMode = 'energy';
-                this.targetHeights = []; // Add the targetHeights array
+                this.targetHeights = [];
+                this.controls = null;
 
                 this.animationStartTime = null;
                 this.animationProgress = 0;
                 this.animationDuration = 1200;
                 this.animationComplete = false;
+                this.isAnimating = false;
 
                 this.raycaster = new THREE.Raycaster();
                 this.mouse = new THREE.Vector2();
@@ -369,13 +472,10 @@
                 this.tooltipArtist = document.getElementById('tooltipArtist');
                 this.tooltipValue = document.getElementById('tooltipValue');
 
-                // Bind all methods that use 'this'
                 this.animate = this.animate.bind(this);
                 this.onMouseMove = this.onMouseMove.bind(this);
                 this.handleResize = this.handleResize.bind(this);
-                this.startAnimation = this.startAnimation.bind(this);
                 this.createBars = this.createBars.bind(this);
-                this.easeOutCubic = this.easeOutCubic.bind(this);
                 this.updateVisualization = this.updateVisualization.bind(this);
 
                 this.container.addEventListener('mousemove', this.onMouseMove);
@@ -384,7 +484,7 @@
                         this.tooltip.classList.add('hidden');
                     }
                     if (this.hoveredBar) {
-                        this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                        this.hoveredBar.material.emissive.multiplyScalar(0.5);
                         this.hoveredBar = null;
                     }
                 });
@@ -392,18 +492,18 @@
                 window.addEventListener('resize', this.handleResize);
             }
 
-            // The rest of your methods remain the same
             initialize() {
                 if (this.isInitialized) return;
 
                 const width = this.container.clientWidth;
-                const height = this.container.clientHeight;
+                const height = this.container.clientHeight || 450;
 
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0x000000);
 
-                this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-                this.camera.position.set(0, 10, 20);
+                this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+                this.camera.position.set(0, 35, 45);
+                this.camera.lookAt(0, 5, 0);
 
                 this.renderer = new THREE.WebGLRenderer({
                     antialias: true,
@@ -417,12 +517,16 @@
                 }
                 this.container.appendChild(this.renderer.domElement);
 
-                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
                 this.scene.add(ambientLight);
 
                 const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
                 directionalLight.position.set(5, 10, 7.5);
                 this.scene.add(directionalLight);
+
+                const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
+                backLight.position.set(-5, 5, -7.5);
+                this.scene.add(backLight);
 
                 this.isInitialized = true;
             }
@@ -466,9 +570,9 @@
                 const sortedValues = [...values].sort((a, b) => a - b);
 
                 return songData.map(song => {
-                    const value = song[featureName];
+                    const value = song[featureName] || 0.5;
                     const index = sortedValues.indexOf(value);
-                    const normalizedRank = index / (sortedValues.length - 1);
+                    const normalizedRank = index / Math.max(1, (sortedValues.length - 1));
 
                     return {
                         ...song,
@@ -487,8 +591,11 @@
             }
 
             clearScene() {
-                while (this.scene.children.length > 0) {
-                    const object = this.scene.children[0];
+                for (let i = this.scene.children.length - 1; i >= 0; i--) {
+                    const object = this.scene.children[i];
+                    
+                    if (object instanceof THREE.Light) continue;
+                    
                     if (object.geometry) object.geometry.dispose();
                     if (object.material) {
                         if (Array.isArray(object.material)) {
@@ -500,36 +607,36 @@
                     this.scene.remove(object);
                 }
 
-                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-                this.scene.add(ambientLight);
-
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(5, 10, 7.5);
-                this.scene.add(directionalLight);
-
                 this.bars = [];
-                this.targetHeights = []; // Clear target heights when clearing scene
+                this.targetHeights = [];
             }
 
             createVisualization() {
-                if (!this.songs.length) return;
+                if (!this.songs || this.songs.length === 0) return;
 
                 this.createBars();
 
                 const songCount = this.songs.length;
-                const cameraZ = Math.max(20, songCount * 0.8);
-                this.camera.position.set(0, 8, cameraZ);
-                this.camera.lookAt(0, 3, 0);
+                
+                const cameraZ = Math.max(45, songCount * 0.5);
+                const cameraY = 35;
+                
+                this.camera.position.set(0, cameraY, cameraZ);
+                this.camera.lookAt(0, 5, 0);
+                
+                this.camera.fov = Math.min(50, 40 + songCount * 0.1);
+                this.camera.updateProjectionMatrix();
             }
 
             createBars() {
                 const songCount = this.songs.length;
                 if (songCount === 0) return;
 
-                const maxBarWidth = 0.8;
-                const minBarWidth = 0.3;
-                const maxSpacing = 0.3;
-                const minSpacing = 0.1;
+                const maxBarWidth = 1.5;
+                const minBarWidth = 0.5;
+                const maxSpacing = 0.5;
+                const minSpacing = 0.2;
+
                 let barWidth, spacing;
 
                 if (songCount <= 10) {
@@ -547,6 +654,26 @@
                 const totalWidth = (barWidth + spacing) * songCount - spacing;
                 const startX = -totalWidth / 2 + barWidth / 2;
 
+                const planeWidth = Math.max(totalWidth * 1.5, 50);
+                const planeGeometry = new THREE.PlaneGeometry(planeWidth, planeWidth);
+                const planeMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x111111,
+                    metalness: 0.7,
+                    roughness: 0.5
+                });
+                const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+                plane.rotation.x = -Math.PI / 2;
+                plane.position.y = 0;
+                this.scene.add(plane);
+
+                const gridHelper = new THREE.GridHelper(planeWidth, 20, 0x444444, 0x222222);
+                gridHelper.position.y = 0.01;
+                this.scene.add(gridHelper);
+
+                const maxHeight = 12;
+                const minHeight = 0.5;
+                const heightRange = maxHeight - minHeight;
+                
                 this.bars = [];
                 this.targetHeights = [];
 
@@ -554,11 +681,7 @@
                     const song = this.songs[i];
                     const value = song.normalizedValue !== undefined ? song.normalizedValue : 0.5;
 
-                    const minHeight = 1;
-                    const maxHeight = 10;
-                    const heightRange = maxHeight - minHeight;
                     const finalHeight = minHeight + (value * heightRange);
-
                     this.targetHeights.push(finalHeight);
 
                     const color = this.getColorForValue(value, this.currentMode);
@@ -568,9 +691,10 @@
                     const material = new THREE.MeshPhongMaterial({
                         color: color,
                         transparent: true,
-                        opacity: 0.85,
-                        reflectivity: 0.9,
-                        emissive: color.clone().multiplyScalar(0.5 + value * 0.5),
+                        opacity: 0.9,
+                        shininess: 100,
+                        emissive: color.clone().multiplyScalar(0.3),
+                        specular: 0xffffff
                     });
 
                     const bar = new THREE.Mesh(geometry, material);
@@ -589,21 +713,6 @@
                     this.scene.add(bar);
                     this.bars.push(bar);
                 }
-
-                const planeGeometry = new THREE.PlaneGeometry(totalWidth + 10, totalWidth * 0.75);
-                const planeMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x111111,
-                    metalness: 0.8,
-                    roughness: 0.5
-                });
-                const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-                plane.rotation.x = -Math.PI / 2;
-                plane.position.y = -0.01;
-                this.scene.add(plane);
-
-                const gridHelper = new THREE.GridHelper(totalWidth + 10, 20, 0x555555, 0x333333);
-                gridHelper.position.y = 0.01;
-                this.scene.add(gridHelper);
             }
 
             startAnimation() {
@@ -628,7 +737,7 @@
                     const elapsed = currentTime - this.animationStartTime;
                     this.animationProgress = Math.min(elapsed / this.animationDuration, 1.0);
 
-                    const easedProgress = this.easeOutCubic(this.animationProgress);
+                    const easedProgress = this.easeOutBack(this.animationProgress);
 
                     for (let i = 0; i < this.bars.length; i++) {
                         const bar = this.bars[i];
@@ -638,8 +747,7 @@
                         const currentHeight = targetHeight * easedProgress;
 
                         bar.geometry.dispose();
-                        bar.geometry = new THREE.BoxGeometry(bar.geometry.parameters.width, currentHeight, bar
-                            .geometry.parameters.depth);
+                        bar.geometry = new THREE.BoxGeometry(bar.geometry.parameters.width, currentHeight, bar.geometry.parameters.depth);
                         bar.position.y = currentHeight / 2;
                     }
 
@@ -651,8 +759,10 @@
                 this.renderer.render(this.scene, this.camera);
             }
 
-            easeOutCubic(x) {
-                return 1 - Math.pow(1 - x, 3);
+            easeOutBack(x) {
+                const c1 = 1.70158;
+                const c3 = c1 + 1;
+                return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
             }
 
             onMouseMove(event) {
@@ -668,7 +778,7 @@
                 const intersects = this.raycaster.intersectObjects(this.bars);
 
                 if (this.hoveredBar && (!intersects.length || intersects[0].object !== this.hoveredBar)) {
-                    this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                    this.hoveredBar.material.emissive = this.hoveredBar.material.color.clone().multiplyScalar(0.3);
                     this.hoveredBar = null;
                 }
 
@@ -678,10 +788,10 @@
 
                     if (this.hoveredBar !== object) {
                         if (this.hoveredBar) {
-                            this.hoveredBar.material.emissive.multiplyScalar(1 / 1.5);
+                            this.hoveredBar.material.emissive = this.hoveredBar.material.color.clone().multiplyScalar(0.3);
                         }
                         this.hoveredBar = object;
-                        object.material.emissive.multiplyScalar(1.5);
+                        object.material.emissive = object.material.color.clone().multiplyScalar(0.8);
                     }
 
                     this.tooltipTitle.textContent = userData.title;
@@ -703,8 +813,8 @@
                     }
                     this.tooltipValue.textContent = valueText;
 
-                    this.tooltip.style.display = 'block';
                     this.tooltip.classList.remove('hidden');
+                    this.tooltip.style.display = 'block';
 
                     const tooltipX = event.clientX + 10;
                     const tooltipY = event.clientY - 10;
@@ -725,10 +835,10 @@
                         finalY = event.clientY - tooltipHeight - 10;
                     }
 
-                    this.tooltip.style.zIndex = '1000';
                     this.tooltip.style.position = 'fixed';
-                    this.tooltip.style.left = finalX + 'px';
-                    this.tooltip.style.top = finalY + 'px';
+                    this.tooltip.style.zIndex = '1000';
+                    this.tooltip.style.left = `${finalX}px`;
+                    this.tooltip.style.top = `${finalY}px`;
                 } else {
                     this.tooltip.classList.add('hidden');
                     this.tooltip.style.display = 'none';
@@ -737,51 +847,65 @@
 
             getColorForValue(normalizedValue, mode) {
                 if (mode === 'energy') {
-                    if (normalizedValue < 0.5) {
-                        const blendFactor = normalizedValue / 0.5;
+                    if (normalizedValue < 0.33) {
+                        const t = normalizedValue / 0.33;
                         return new THREE.Color(
-                            blendFactor * 0.5,
-                            0,
-                            1 - (blendFactor * 0.5)
+                            0.1 + t * 0.2,
+                            0.1 + t * 0.1,
+                            0.7 - t * 0.2
+                        );
+                    } else if (normalizedValue < 0.66) {
+                        const t = (normalizedValue - 0.33) / 0.33;
+                        return new THREE.Color(
+                            0.3 + t * 0.4,
+                            0.2 - t * 0.1,
+                            0.5 - t * 0.2
                         );
                     } else {
-                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        const t = (normalizedValue - 0.66) / 0.34;
                         return new THREE.Color(
-                            0.5 + (blendFactor * 0.5),
-                            0,
-                            0.5 - (blendFactor * 0.5)
+                            0.7 + t * 0.3,
+                            0.1 + t * 0.1,
+                            0.3 - t * 0.2
                         );
                     }
                 } else if (mode === 'mood') {
                     if (normalizedValue < 0.5) {
-                        const blendFactor = normalizedValue / 0.5;
+                        const t = normalizedValue / 0.5;
                         return new THREE.Color(
-                            1,
-                            blendFactor * 0.5,
-                            0
+                            0.9,
+                            0.1 + t * 0.4,
+                            0.1
                         );
                     } else {
-                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        const t = (normalizedValue - 0.5) / 0.5;
                         return new THREE.Color(
-                            1 - blendFactor,
-                            0.5 + (blendFactor * 0.5),
-                            0
+                            0.9 - t * 0.6,
+                            0.5 + t * 0.4,
+                            0.1 + t * 0.1
                         );
                     }
                 } else if (mode === 'danceability') {
-                    if (normalizedValue < 0.5) {
-                        const blendFactor = normalizedValue / 0.5;
+                    if (normalizedValue < 0.4) {
+                        const t = normalizedValue / 0.4;
                         return new THREE.Color(
-                            0.5 - (blendFactor * 0.5),
-                            0,
-                            blendFactor * 0.5 + 0.5
+                            0.5 - t * 0.3,
+                            0.0 + t * 0.1,
+                            0.6
+                        );
+                    } else if (normalizedValue < 0.7) {
+                        const t = (normalizedValue - 0.4) / 0.3;
+                        return new THREE.Color(
+                            0.2 - t * 0.2,
+                            0.1 + t * 0.4,
+                            0.6 - t * 0.2
                         );
                     } else {
-                        const blendFactor = (normalizedValue - 0.5) / 0.5;
+                        const t = (normalizedValue - 0.7) / 0.3;
                         return new THREE.Color(
-                            0,
-                            blendFactor,
-                            1 - blendFactor
+                            0.0 + t * 0.2,
+                            0.5 + t * 0.4,
+                            0.4 - t * 0.2
                         );
                     }
                 }
@@ -805,7 +929,6 @@
                 this.isInitialized = false;
             }
         }
-
 
         function initializeVisualization(songData, mode) {
             if (window.visualizer) {
@@ -838,21 +961,54 @@
                 alert('Please enter a Spotify playlist URL.');
                 return;
             }
-            if (!playlistUrl.includes('spotify.com/playlist/')) {
-                alert('Please enter a valid Spotify playlist URL.');
-                return;
-            }
 
             state.isLoading = true;
             elements.analyzeBtn.disabled = true;
             elements.analyzeBtn.textContent = 'Processing...';
+            elements.initialView.classList.add('hidden');
             elements.resultsContainer.classList.remove('hidden');
             elements.loadingAnalysis.classList.remove('hidden');
             elements.loadingVisualization.classList.remove('hidden');
             elements.analysisText.innerHTML = '';
+            elements.playlistUrlDisplay.textContent = playlistUrl;
 
             try {
-                const analysisData = await fetchPlaylistAnalysis(playlistUrl);
+                let analysisData;
+                
+                if (playlistUrl === 'https://open.spotify.com/playlist/demo') {
+                    analysisData = {
+                        playlist_analysis: `This playlist offers a rich tapestry of emotions, weaving together a spectrum of sounds and experiences from various artists and genres. It begins with "Mirage" by Orion Sun, an ethereal introduction that invites listeners into a dream-like state, setting a tone of introspection. The transition to "Low Sun" by Hermanos Gutiérrez maintains a mellow atmosphere, with its instrumental depth creating a sense of calm and reflection. As we move into "ENAMEL" by Eddie Burns and William Corduroy, there is an introduction of electronic textures that subtly energizes the mood, hinting at complexity and modernity.
+
+Amy Winehouse's "Valerie" in its live rendition injects a classic yet vibrant energy, bridging the playlist from introspective tones to the raw emotion of soulful nostalgia, which Mukesh's "KISI KI MUSKURAHATON PE" complements with its heartfelt warmth. This sets the stage for Lady Wray's "Guilty," which delves deeper into the raw and confessional, allowing the listener to explore themes of personal reckoning and authenticity. As the playlist progresses, songs like "What You Need" by KAYTRANADA and Charlotte Day Wilson, and "Shibuya" by Free Nationals and Syd, bring a smooth, contemporary groove that marries introspection with an upbeat energy, evolving the emotional arc toward liberation and connection.
+
+A shift in tempo and mood occurs with Thundercat's "Dragonball Durag," injecting humor and lightheartedness, while Kokoroko's "Three Piece Suit" offers a fusion of jazz and Afrobeat, enriching the sonic landscape with layers of cultural and rhythmic heritage. The contemplative atmosphere is restored with Thee Sacred Souls' "Will I See You Again?" and KAMAUU's "MANGO," both exploring themes of longing and intimacy. Midway, Michael Kiwanuka's "Floating Parade" bridges the contemplative with a soulful and expansive sound, setting a reflective yet hopeful tone.
+
+As the playlist transitions into tracks like "Where Are You?" by 54 Ultra and "Maria También" by Khruangbin, there is a thematic turn towards exploration and wanderlust, distinguished by instrumental storytelling and global influences. Erykah Badu's "Appletree" and Hiatus Kaiyote's "Red Room" delve into conscious introspection and narrative depth, expanding the thematic exploration to personal growth and resilience. Little Simz and Cleo Sol's "Woman" celebrates empowerment and identity with a confident and assertive energy.`,
+                        songs: [
+                            { title: "Mirage", artist: "Orion Sun", energy: 0.4, danceability: 0.3, mood: 0.6 },
+                            { title: "Low Sun", artist: "Hermanos Gutiérrez", energy: 0.3, danceability: 0.2, mood: 0.7 },
+                            { title: "ENAMEL", artist: "Eddie Burns & William Corduroy", energy: 0.6, danceability: 0.5, mood: 0.6 },
+                            { title: "Valerie (Live)", artist: "Amy Winehouse", energy: 0.8, danceability: 0.7, mood: 0.8 },
+                            { title: "KISI KI MUSKURAHATON PE", artist: "Mukesh", energy: 0.5, danceability: 0.4, mood: 0.9 },
+                            { title: "Guilty", artist: "Lady Wray", energy: 0.7, danceability: 0.6, mood: 0.4 },
+                            { title: "What You Need", artist: "KAYTRANADA ft. Charlotte Day Wilson", energy: 0.8, danceability: 0.9, mood: 0.7 },
+                            { title: "Shibuya", artist: "Free Nationals & Syd", energy: 0.6, danceability: 0.8, mood: 0.8 },
+                            { title: "Dragonball Durag", artist: "Thundercat", energy: 0.7, danceability: 0.8, mood: 0.9 },
+                            { title: "Three Piece Suit", artist: "Kokoroko", energy: 0.8, danceability: 0.7, mood: 0.8 },
+                            { title: "Will I See You Again?", artist: "Thee Sacred Souls", energy: 0.4, danceability: 0.5, mood: 0.6 },
+                            { title: "MANGO", artist: "KAMAUU", energy: 0.5, danceability: 0.6, mood: 0.7 },
+                            { title: "Floating Parade", artist: "Michael Kiwanuka", energy: 0.6, danceability: 0.4, mood: 0.8 },
+                            { title: "Where Are You?", artist: "54 Ultra", energy: 0.4, danceability: 0.3, mood: 0.5 },
+                            { title: "Maria También", artist: "Khruangbin", energy: 0.7, danceability: 0.6, mood: 0.7 },
+                            { title: "Appletree", artist: "Erykah Badu", energy: 0.5, danceability: 0.7, mood: 0.8 },
+                            { title: "Red Room", artist: "Hiatus Kaiyote", energy: 0.6, danceability: 0.5, mood: 0.7 },
+                            { title: "Woman", artist: "Little Simz ft. Cleo Sol", energy: 0.9, danceability: 0.8, mood: 0.9 }
+                        ],
+                        track_count: 18
+                    };
+                } else {
+                    analysisData = await fetchPlaylistAnalysis(playlistUrl);
+                }
 
                 displayAnalysisResults(analysisData);
 
@@ -860,11 +1016,17 @@
                     state.playlistData = analysisData.songs;
                     initializeVisualization(analysisData.songs, state.visualizationMode);
                 }
+
+                state.isLoading = false;
+                elements.analyzeBtn.disabled = false;
+                elements.analyzeBtn.textContent = 'Analyze & Visualize';
+                elements.loadingAnalysis.classList.add('hidden');
+                elements.loadingVisualization.classList.add('hidden');
             } catch (error) {
                 console.error('Error analyzing playlist:', error);
                 elements.analysisText.innerHTML =
                     `<p class="text-red-500">Error: Could not analyze playlist. The playlist you provided is private or unavailable. Please make sure the playlist is public so it can be analyzed. You can change its visibility in the Spotify app by selecting 'Make Public' in the playlist settings.</br> ${error.message}</p>`;
-            } finally {
+                
                 state.isLoading = false;
                 elements.analyzeBtn.disabled = false;
                 elements.analyzeBtn.textContent = 'Analyze & Visualize';
@@ -876,6 +1038,7 @@
         document.getElementById('energyLegend').classList.remove('hidden');
         document.getElementById('danceabilityLegend').classList.add('hidden');
         document.getElementById('moodLegend').classList.add('hidden');
+        document.getElementById('dataSourceIndicator').classList.remove('hidden');
 
         const songTooltip = document.getElementById('songTooltip');
         if (songTooltip) {
@@ -884,6 +1047,8 @@
             songTooltip.classList.add('hidden');
             songTooltip.style.display = 'none';
         }
+
+        elements.playlistUrlInput.value = 'https://open.spotify.com/playlist/demo';
     </script>
 </body>
 
