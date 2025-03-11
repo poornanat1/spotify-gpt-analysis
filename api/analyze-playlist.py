@@ -13,6 +13,9 @@ import asyncio
 import requests
 import numpy as np
 import json
+import hashlib
+from functools import lru_cache
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,6 +27,7 @@ class Config:
     SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET") 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     LASTFM_API_KEY = os.getenv("LASTFM_API_KEY")
+    CACHE_EXPIRY = int(os.getenv("CACHE_EXPIRY", "86400"))  # Default 24 hours in seconds
 
 class ReferenceText:
     ENERGY = "high energy, loud, intense, upbeat, dynamic, driving, fast"
@@ -36,6 +40,51 @@ class ReferenceText:
         "melancholic, sad, gloomy, depressing, somber, dark, moody, introspective, brooding, emotional, "
         "anxious, tense, angry, frustrated, bitter, pensive, nostalgic, wistful, yearning, lonely"
     )
+
+class Cache:
+    _playlist_cache = {}
+    _track_features_cache = {}
+    _embedding_cache = {}
+    
+    @classmethod
+    def get_playlist(cls, playlist_id):
+        if playlist_id in cls._playlist_cache:
+            timestamp, data = cls._playlist_cache[playlist_id]
+            if datetime.now() - timestamp < timedelta(seconds=Config.CACHE_EXPIRY):
+                logger.info(f"Cache hit for playlist {playlist_id}")
+                return data
+        return None
+    
+    @classmethod
+    def set_playlist(cls, playlist_id, data):
+        cls._playlist_cache[playlist_id] = (datetime.now(), data)
+        logger.info(f"Cached playlist {playlist_id}")
+    
+    @classmethod
+    def get_track_features(cls, track_id):
+        if track_id in cls._track_features_cache:
+            timestamp, data = cls._track_features_cache[track_id]
+            if datetime.now() - timestamp < timedelta(seconds=Config.CACHE_EXPIRY):
+                return data
+        return None
+    
+    @classmethod
+    def set_track_features(cls, track_id, data):
+        cls._track_features_cache[track_id] = (datetime.now(), data)
+    
+    @classmethod
+    def get_embedding(cls, text):
+        text_hash = hashlib.md5(text.encode()).hexdigest()
+        if text_hash in cls._embedding_cache:
+            timestamp, data = cls._embedding_cache[text_hash]
+            if datetime.now() - timestamp < timedelta(seconds=Config.CACHE_EXPIRY):
+                return data
+        return None
+    
+    @classmethod
+    def set_embedding(cls, text, data):
+        text_hash = hashlib.md5(text.encode()).hexdigest()
+        cls._embedding_cache[text_hash] = (datetime.now(), data)
 
 class EmbeddingService:
     def __init__(self, openai_client):
@@ -51,14 +100,25 @@ class EmbeddingService:
         }
 
     def _get_embedding(self, text: str, engine="text-embedding-ada-002"):
+        cached = Cache.get_embedding(text)
+        if cached:
+            return cached
+            
         response = self.openai_client.embeddings.create(
             input=text,
             model=engine
         )
-        return response.data[0].embedding
+        embedding = response.data[0].embedding
+        Cache.set_embedding(text, embedding)
+        return embedding
 
     async def get_embedding_async(self, text: str, engine="text-embedding-ada-002"):
-        return await asyncio.to_thread(self._get_embedding, text, engine)
+        cached = Cache.get_embedding(text)
+        if cached:
+            return cached
+            
+        embedding = await asyncio.to_thread(self._get_embedding, text, engine)
+        return embedding
 
     @staticmethod
     def cosine_similarity(vec1, vec2):
@@ -161,6 +221,12 @@ class SpotifyService:
     def get_playlist_tracks(self, playlist_url: str) -> List[Dict[str, Any]]:
         try:
             playlist_id = self.extract_playlist_id(playlist_url)
+            
+            # Check cache first
+            cached_tracks = Cache.get_playlist(playlist_id)
+            if cached_tracks:
+                return cached_tracks
+                
             playlist_info = self.client.playlist(playlist_id)
             
             if playlist_info.get("public") is False:
@@ -171,7 +237,7 @@ class SpotifyService:
                 ))
                 
             results = self.client.playlist_tracks(playlist_id, limit=30)
-            return [
+            tracks = [
                 {
                     "id": track["track"].get("id"),
                     "name": track["track"].get("name", "Unknown Track"),
@@ -181,6 +247,11 @@ class SpotifyService:
                 for track in results['items']
                 if track and track.get('track')
             ]
+            
+            # Cache the results
+            Cache.set_playlist(playlist_id, tracks)
+            
+            return tracks
         except spotipy.exceptions.SpotifyException as e:
             logger.error(f"Spotify API error: {str(e)}")
             raise HTTPException(status_code=500, detail="Error connecting to Spotify API")
@@ -195,6 +266,12 @@ class OpenAIService:
         self.client = OpenAI(api_key=api_key)
 
     async def generate_analysis(self, playlist_description: str) -> str:
+        # Create a hash of the playlist description for caching
+        playlist_hash = hashlib.md5(playlist_description.encode()).hexdigest()
+        cached_analysis = Cache.get_embedding(f"analysis_{playlist_hash}")
+        if cached_analysis:
+            return cached_analysis
+            
         try:
             prompt = f"""
             Analyze this playlist in a single short multi-paragraph essay without markdown formatting:
@@ -219,12 +296,23 @@ class OpenAIService:
             
             if not completion or not completion.choices or not completion.choices[0].message:
                 raise ValueError("Empty response from OpenAI")
-            return completion.choices[0].message.content.strip()
+                
+            analysis = completion.choices[0].message.content.strip()
+            Cache.set_embedding(f"analysis_{playlist_hash}", analysis)
+            return analysis
         except Exception as e:
             logger.error(f"Error generating analysis: {str(e)}")
             return "Unable to generate analysis for this playlist."
 
     async def fallback_llm_scores(self, artist: str, track: str, album: str) -> Dict[str, float]:
+        # Create a unique key for this track
+        track_key = f"{artist}_{track}_{album}"
+        track_hash = hashlib.md5(track_key.encode()).hexdigest()
+        
+        cached_scores = Cache.get_track_features(track_hash)
+        if cached_scores:
+            return cached_scores
+            
         system_prompt = (
             "You are a helpful assistant that returns approximate numeric music scores.\n"
             "Return valid JSON with exactly these keys: 'energy', 'danceability', 'mood'.\n"
@@ -254,13 +342,17 @@ class OpenAIService:
             content = response.choices[0].message.content.strip()
             scores = json.loads(content)
             
-            return {
+            result = {
                 key: min(max(float(scores.get(key, 0.5)), 0.0), 1.0)
                 for key in ["energy", "danceability", "mood"]
             }
+            result["source"] = "llm"
+            
+            Cache.set_track_features(track_hash, result)
+            return result
         except Exception as e:
             logger.error(f"LLM fallback error: {e}")
-            return {"energy": 0.5, "danceability": 0.5, "mood": 0.5}
+            return {"energy": 0.5, "danceability": 0.5, "mood": 0.5, "source": "default"}
 
 class PlaylistAnalyzer:
     def __init__(self):
@@ -270,6 +362,15 @@ class PlaylistAnalyzer:
         self.embedding_service = EmbeddingService(self.openai_service.client)
 
     async def analyze(self, playlist_url: str):
+        playlist_id = self.spotify_service.extract_playlist_id(playlist_url)
+        
+        # Check if we have a complete analysis cached
+        analysis_key = f"complete_analysis_{playlist_id}"
+        cached_analysis = Cache.get_embedding(analysis_key)
+        if cached_analysis:
+            logger.info(f"Returning cached complete analysis for playlist {playlist_id}")
+            return cached_analysis
+            
         songs = self.spotify_service.get_playlist_tracks(playlist_url)
         if not songs:
             return JSONResponse(status_code=404, content={"detail": "No songs found in the playlist"})
@@ -295,12 +396,17 @@ class PlaylistAnalyzer:
             for song, feat in zip(songs, features)
         ]
 
-        return {
+        result = {
             "playlist_analysis": analysis,
             "track_count": len(songs),
             "feature_source": "embedding/LLM fallback",
             "songs": songs_with_features
         }
+        
+        # Cache the complete analysis
+        Cache.set_embedding(analysis_key, result)
+        
+        return result
 
     async def _get_features_for_songs(self, songs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         semaphore = asyncio.Semaphore(10)
@@ -316,6 +422,17 @@ class PlaylistAnalyzer:
         artist = track["artist"]
         name = track["name"]
         album = track.get("album", "")
+        track_id = track.get("id", "")
+        
+        # Create a unique key for this track
+        track_key = f"{artist}_{name}_{album}"
+        track_hash = hashlib.md5(track_key.encode()).hexdigest()
+        
+        # Check cache first
+        cached_features = Cache.get_track_features(track_hash)
+        if cached_features:
+            logger.info(f"Cache hit for track features: {name}")
+            return cached_features
 
         tags = await self.lastfm_service.get_all_tags_parallel(artist, name, album)
 
@@ -349,12 +466,17 @@ class PlaylistAnalyzer:
 
         logger.info(f"[{name}] Energy: {energy_score:.2f}, Dance: {danceability_score:.2f}, Mood: {mood_score:.2f}")
         
-        return {
+        result = {
             "energy": energy_score,
             "danceability": danceability_score,
             "mood": mood_score,
             "source": "embedding"
         }
+        
+        # Cache the results
+        Cache.set_track_features(track_hash, result)
+        
+        return result
 
 app = FastAPI(title="Spotify Playlist Analyzer")
 
