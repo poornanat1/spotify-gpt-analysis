@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <html lang="en">
 
 <head>
@@ -14,9 +15,10 @@
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Playfair Display', serif;
             background-color: #f8f9fa;
             color: #212529;
+            -webkit-overflow-scrolling: touch; /* Improve scrolling on iOS */
         }
 
         .title-font {
@@ -113,6 +115,35 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        /* Mobile scrolling fixes */
+        html, body {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        
+        #resultsContainer {
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .results-content {
+            min-height: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-container {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .card {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+        }
     </style>
 </head>
 
@@ -141,7 +172,7 @@
             </div>
         </div>
 
-        <div id="resultsContainer" class="hidden h-screen flex flex-col">
+        <div id="resultsContainer" class="hidden h-screen flex flex-col overflow-y-auto">
             <header class="bg-white shadow-sm py-3 px-6 sticky top-0 z-10">
                 <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
                     <div class="flex items-center mb-3 md:mb-0">
@@ -156,9 +187,9 @@
                 </div>
             </header>
 
-            <div class="flex-grow overflow-hidden">
-                <div class="h-full grid grid-cols-1 lg:grid-cols-9 gap-6 p-4 md:p-6">
-                    <div class="lg:col-span-4 flex flex-col max-h-[calc(100vh-120px)]">
+            <div class="flex-grow overflow-y-auto">
+                <div class="results-content grid-container h-full grid grid-cols-1 lg:grid-cols-9 gap-6 p-4 md:p-6">
+                    <div class="lg:col-span-4 flex flex-col">
                         <div class="card p-6 flex flex-col h-full overflow-hidden">
                             <h2 class="text-xl font-medium mb-4 text-gray-900">Analysis</h2>
                             <div id="loadingAnalysis" class="hidden flex-grow flex items-center justify-center">
@@ -171,7 +202,7 @@
                         </div>
                     </div>
 
-                    <div class="lg:col-span-5 flex flex-col max-h-[calc(100vh-120px)]">
+                    <div class="lg:col-span-5 flex flex-col">
                         <div class="card p-6 flex flex-col h-full relative">
                             <div class="flex flex-col h-full">
                                 <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
@@ -194,7 +225,7 @@
                                     </div>
                                 </div>
 
-                                <div style="height: calc(100vh - 280px);" class="relative">
+                                <div style="height: 50vh; min-height: 300px;" class="relative">
                                     <div id="threeContainer" class="absolute inset-0 rounded-lg"></div>
                                 </div>
 
